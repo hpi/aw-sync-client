@@ -1,0 +1,28 @@
+{
+  "name": "@watchers/aw-sync-client",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "cronitor-caller": "^1.1.2",
+    "debug": "^4.1.1",
+    "hyperdrive": "^9.16.0",
+    "hyperswarm": "^2.4.0",
+    "moment": "^2.24.0",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/TheWatchers/aw-sync-client.git"
+  },
+  "author": "Madeline Cameron <maddie@qnzl.co>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://gitlab.com/TheWatchers/aw-sync-client/issues"
+  },
+  "homepage": "https://gitlab.com/TheWatchers/aw-sync-client#readme"
+}
