@@ -15,6 +15,8 @@ const heartbeat = async () => {
 
   const data = await bucketData.json()
 
+  console.log("GOT DATA:", data)
+
   debug(`reconciling data export with remote`)
   await fetch(`${process.env.AW_SYNC_SERVER}/api/v1/reconcile`, {
     method: `POST`,
