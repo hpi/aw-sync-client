@@ -2,19 +2,27 @@ const { spawnSync } = require(`child_process`)
 const { resolve } = require(`path`)
 const hyperdrive = require(`hyperdrive`)
 const hyperswarm = require(`hyperswarm`)
-const moment = require(`moment-tz`)
+const moment = require(`moment-timezone`)
 const fetch = require(`node-fetch`)
 const debug = require(`debug`)(`qnzl:aw:sync-client`)
 const fs = require(`fs`)
 
 const ONE_HOUR = 60 * 60 * 1000
 
-let TIME_MARKER = moment()
 const TIME_MARKER_FILE = resolve(`.`, `marker`)
+
+const loadMarker = () => {
+  const stringTimeMarker = fs.readFileSync(TIME_MARKER_FILE, `utf8`).trim()
+
+  debug(`loaded ${stringTimeMarker} as time marker`)
+
+  return moment(stringTimeMarker) || moment()
+}
+
+let TIME_MARKER = loadMarker()
 
 const WEB_QUERY = [
   "afk_events = query_bucket(find_bucket(\"aw-watcher-afk_\"));",
-  "web_events = query_bucket(find_bucket(\"aw-watcher-web_\"));",
   "chrome_events = query_bucket(find_bucket(\"aw-watcher-web-chrome\"));",
   "firefox_events = query_bucket(find_bucket(\"aw-watcher-web-firefox\"));",
   "events = concat(chrome_events, firefox_events);",
@@ -25,7 +33,7 @@ const WEB_QUERY = [
 
 const VIM_QUERY = [
   "afk_events = query_bucket(find_bucket(\"aw-watcher-afk_\"));",
-  "events = query_bucket(find_bucket(\"aw-watcher-vim_\"));"
+  "events = query_bucket(find_bucket(\"aw-watcher-vim_\"));",
   "filtered_events = filter_period_intersect(events, filter_keyvals(afk_events, \"status\", [\"not-afk\"]));",
   "merged_events = merge_events_by_keys(filtered_events, [\"file\", \"language\", \"project\"]);",
   "RETURN = [merged_events, filtered_events];"
@@ -37,7 +45,7 @@ const WINDOW_QUERY = [
   "window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, \"status\", [\"not-afk\"]));",
   "filtered_events = exclude_keyvals(window_events, \"app\", [ \"Google-chrome\", \"Brave-browser\", \"Safari\" ]);",
   "merged_events = merge_events_by_keys(filtered_events, [\"app\", \"title\"]);",
-  "RETURN = [merged_events, filtered_window]"
+  "RETURN = [merged_events, filtered_events]"
 ]
 
 const heartbeat = async () => {
@@ -60,14 +68,20 @@ const heartbeat = async () => {
       }
 
       const bucketData = await fetch(`http://localhost:5600/api/0/query`, {
+        method: `POST`,
+        headers: {
+          [`Content-Type`]: `application/json`,
+        },
         body: JSON.stringify(newQuery),
       })
 
-      const [ mergedEvents, allEvents ] = await bucketData.json()
+      const [[ mergedEvents, allEvents ]] = await bucketData.json()
 
       debug(`got ${mergedEvents.length} merged and ${allEvents.length} in all`)
       const eventIds = allEvents.reduce((ids, { id }) => {
         ids.push(id)
+
+        return ids
       }, [])
 
       debug(`syncing data`)
@@ -82,9 +96,11 @@ const heartbeat = async () => {
           eventIds,
         }),
       })
+
+      return Promise.resolve()
     })
 
-    await Promise.allSettled(addPromises)
+    const a = await Promise.allSettled(addPromises)
     saveMarker()
 
     if (process.argv[2] !== `once`) {
@@ -105,15 +121,7 @@ const saveMarker = () => {
 
   debug(`saving ${TIME_MARKER} as time marker`)
 
-  return fs.saveFileSync(TIME_MARKER_FILE, TIME_MARKER)
-}
-
-const loadMarker = () => {
-  const stringTimeMarker = fs.readFileSync(TIME_MARKER_FILE, `utf8`)
-
-  debug(`loaded ${stringTimeMarker} as time marker`)
-
-  TIME_MARKER = moment(stringTimeMarker)
+  return fs.writeFileSync(TIME_MARKER_FILE, TIME_MARKER)
 }
 
 process.on(`SIGINT`, () => {
