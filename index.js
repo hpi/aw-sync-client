@@ -9,7 +9,7 @@ const fs = require(`fs`)
 
 const ONE_HOUR = 60 * 60 * 1000
 
-const TIME_MARKER_FILE = resolve(`.`, `marker`)
+const TIME_MARKER_FILE = resolve(__dirname, `marker`)
 
 const loadMarker = () => {
   const stringTimeMarker = fs.readFileSync(TIME_MARKER_FILE, `utf8`).trim()
