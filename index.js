@@ -15,13 +15,11 @@ const TIME_MARKER_FILE = resolve(`.`, `marker`)
 const WEB_QUERY = [
   "afk_events = query_bucket(find_bucket(\"aw-watcher-afk_\"));",
   "web_events = query_bucket(find_bucket(\"aw-watcher-web_\"));",
-  "chrome_events = query_bucket(find_bucket(\"aw-watcher-web-chrome\"));"
-  "firefox_events = query_bucket(find_bucket(\"aw-watcher-web-firefox\"));"
-
-  "events = concat(chrome_events, firefox_events);"
+  "chrome_events = query_bucket(find_bucket(\"aw-watcher-web-chrome\"));",
+  "firefox_events = query_bucket(find_bucket(\"aw-watcher-web-firefox\"));",
+  "events = concat(chrome_events, firefox_events);",
   "filtered_events = filter_period_intersect(events, filter_keyvals(afk_events, \"status\", [\"not-afk\"]));",
-  "merged_events = merge_events_by_keys(filtered_events, [\"url\", \"title\", \"audible\", \"incognito\", \"tabCount\"]);"
-
+  "merged_events = merge_events_by_keys(filtered_events, [\"url\", \"title\", \"audible\", \"incognito\", \"tabCount\"]);",
   "RETURN = [merged_events, filtered_events];"
 ]
 
@@ -37,11 +35,10 @@ const WINDOW_QUERY = [
   "afk_events = query_bucket(find_bucket(\"aw-watcher-afk_\"));",
   "window_events = query_bucket(find_bucket(\"aw-watcher-window_\"));",
   "window_events = filter_period_intersect(window_events, filter_keyvals(afk_events, \"status\", [\"not-afk\"]));",
-  "filtered_events = exclude_keyvals(window_events, \"app\", [ \"Google-chrome\", \"Brave-browser\", \"Safari\" ]);"
+  "filtered_events = exclude_keyvals(window_events, \"app\", [ \"Google-chrome\", \"Brave-browser\", \"Safari\" ]);",
   "merged_events = merge_events_by_keys(filtered_events, [\"app\", \"title\"]);",
   "RETURN = [merged_events, filtered_window]"
 ]
-
 
 const heartbeat = async () => {
   try {
