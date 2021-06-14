@@ -75,7 +75,18 @@ const heartbeat = async () => {
         body: JSON.stringify(newQuery),
       })
 
-      const [[ mergedEvents, allEvents ]] = await bucketData.json()
+      const buckets = await bucketData.json()
+
+      if (!Array.isArray(buckets)) {
+        return
+      }
+
+      const [
+        [
+          mergedEvents,
+          allEvents,
+        ]
+      ] = buckets
 
       debug(`got ${mergedEvents.length} merged and ${allEvents.length} in all`)
       const eventIds = allEvents.reduce((ids, { id }) => {
@@ -100,7 +111,8 @@ const heartbeat = async () => {
       return Promise.resolve()
     })
 
-    const a = await Promise.allSettled(addPromises)
+    await Promise.all(addPromises)
+
     saveMarker()
 
     if (process.argv[2] !== `once`) {
@@ -117,11 +129,11 @@ const heartbeat = async () => {
 }
 
 const saveMarker = () => {
-  TIME_MARKER = moment().format()
+  TIME_MARKER = moment()
 
   debug(`saving ${TIME_MARKER} as time marker`)
 
-  return fs.writeFileSync(TIME_MARKER_FILE, TIME_MARKER)
+  return fs.writeFileSync(TIME_MARKER_FILE, TIME_MARKER.format())
 }
 
 process.on(`SIGINT`, () => {
